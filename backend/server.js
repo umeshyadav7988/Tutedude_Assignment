@@ -1,19 +1,20 @@
-require('dotenv').config();
+// --- server.js ---
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-
 const progressRoutes = require('./routes/progress');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI, {
+mongoose.connect('mongodb://localhost:27017/videoProgress', {
   useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log("MongoDB Connected"));
+  useUnifiedTopology: true,
+});
 
 app.use('/api/progress', progressRoutes);
 
-app.listen(5000, () => console.log('Server running on port 5000'));
+app.listen(5000, () => {
+  console.log('Server running on port 5000');
+});
