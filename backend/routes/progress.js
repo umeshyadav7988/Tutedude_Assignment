@@ -2,42 +2,35 @@ const express = require('express');
 const router = express.Router();
 const Progress = require('../models/Progress');
 
-function mergeIntervals(intervals) {
-  const sorted = [...intervals].sort((a, b) => a.start - b.start);
-  const merged = [];
-  let current = sorted[0];
-
-  for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i].start <= current.end) {
-      current.end = Math.max(current.end, sorted[i].end);
-    } else {
-      merged.push(current);
-      current = sorted[i];
-    }
-  }
-  merged.push(current);
-  return merged;
-}
-
-router.post('/save', async (req, res) => {
-  const { userId, videoId, watchedIntervals, lastWatchedPosition } = req.body;
-
-  let progress = await Progress.findOne({ userId, videoId });
-  if (!progress) {
-    progress = new Progress({ userId, videoId, watchedIntervals, lastWatchedPosition });
-  } else {
-    const merged = mergeIntervals([...progress.watchedIntervals, ...watchedIntervals]);
-    progress.watchedIntervals = merged;
-    progress.lastWatchedPosition = lastWatchedPosition;
-  }
-  await progress.save();
-  res.send(progress);
-});
-
+// GET user progress
 router.get('/:userId/:videoId', async (req, res) => {
   const { userId, videoId } = req.params;
-  const progress = await Progress.findOne({ userId, videoId });
-  res.send(progress);
+  try {
+    const data = await Progress.findOne({ userId, videoId });
+    res.json(data || {});
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching progress' });
+  }
+});
+
+// POST/UPDATE user progress
+router.post('/', async (req, res) => {
+  const { userId, videoId, watchedIntervals, lastWatchedTime, progressPercent } = req.body;
+  try {
+    let progress = await Progress.findOne({ userId, videoId });
+    if (progress) {
+      progress.watchedIntervals = watchedIntervals;
+      progress.lastWatchedTime = lastWatchedTime;
+      progress.progressPercent = progressPercent;
+      await progress.save();
+    } else {
+      progress = new Progress({ userId, videoId, watchedIntervals, lastWatchedTime, progressPercent });
+      await progress.save();
+    }
+    res.json({ message: 'Progress saved successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error saving progress' });
+  }
 });
 
 module.exports = router;

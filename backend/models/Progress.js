@@ -1,16 +1,16 @@
-// --- models/Progress.js ---
 const mongoose = require('mongoose');
 
 const intervalSchema = new mongoose.Schema({
   start: Number,
-  end: Number,
+  end: Number
 });
 
 const progressSchema = new mongoose.Schema({
-  userId: String,
-  videoId: String,
+  userId: { type: String, required: true },
+  videoId: { type: String, required: true },
   watchedIntervals: [intervalSchema],
-  lastWatchedPosition: Number,
+  lastWatchedTime: Number,
+  progressPercent: Number
 });
 
 module.exports = mongoose.model('Progress', progressSchema);

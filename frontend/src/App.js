@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const USER_ID = "user123"; // replace with dynamic auth ID later
+const USER_ID = "user123"; 
 const VIDEO_ID = "video123";
 
 const App = () => {
@@ -93,6 +93,23 @@ const App = () => {
       .catch((err) => console.error("Save error:", err));
   };
 
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/progress/defaultUser/video1`);
+        if (res.data) {
+          setWatchedIntervals(res.data.watchedIntervals || []);
+          setLastSavedTime(res.data.lastWatchedTime || 0);
+          setProgressPercent(res.data.progressPercent || 0);
+        }
+      } catch (err) {
+        console.error('Error loading progress', err);
+      }
+    };
+    fetchProgress();
+  }, []);
+  
+
   return (
     <div className="App" style={{ padding: "20px", fontFamily: "Arial" }}>
       <h2>📺 Lecture Video</h2>
@@ -104,9 +121,12 @@ const App = () => {
         onTimeUpdate={handleTimeUpdate}
         onPause={handlePause}
         onLoadedMetadata={() => {
-          setVideoDuration(videoRef.current.duration);
-          videoRef.current.currentTime = lastSavedTime;
+          const video = videoRef.current;
+          if (video && lastSavedTime) {
+            video.currentTime = lastSavedTime;
+          }
         }}
+        
       >
         <source src="/sample-5s.mp4" type="video/mp4" />
         Your browser does not support the video tag.
