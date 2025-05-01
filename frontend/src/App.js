@@ -1,88 +1,142 @@
-// --- App.js ---
-import React, { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
+// src/App.js
+import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
+import "./App.css";
 
-const VIDEO_DURATION = 120; // seconds, hardcoded for demo
-const USER_ID = 'user123';
-const VIDEO_ID = 'videoABC';
+const USER_ID = "user123"; // replace with dynamic auth ID later
+const VIDEO_ID = "video123";
 
-function mergeIntervals(intervals) {
-  const sorted = [...intervals].sort((a, b) => a.start - b.start);
-  const merged = [];
-  let current = sorted[0];
-  for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i].start <= current.end) {
-      current.end = Math.max(current.end, sorted[i].end);
-    } else {
-      merged.push(current);
-      current = sorted[i];
-    }
-  }
-  merged.push(current);
-  return merged;
-}
-
-function calculateProgress(intervals) {
-  const merged = mergeIntervals(intervals);
-  const totalWatched = merged.reduce((sum, i) => sum + (i.end - i.start), 0);
-  return ((totalWatched / VIDEO_DURATION) * 100).toFixed(2);
-}
-
-function App() {
-  const videoRef = useRef();
-  const [watched, setWatched] = useState([]);
+const App = () => {
+  const videoRef = useRef(null);
+  const [watchedIntervals, setWatchedIntervals] = useState([]);
   const [lastSavedTime, setLastSavedTime] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+
+  const backendUrl = "http://localhost:5000/api/progress";
 
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/progress/${USER_ID}/${VIDEO_ID}`)
-      .then(res => {
-        if (res.data) {
-          setWatched(res.data.watchedIntervals);
-          setLastSavedTime(res.data.lastWatchedPosition || 0);
-        }
-      });
+    axios
+      .get(`${backendUrl}/${USER_ID}/${VIDEO_ID}`)
+      .then((res) => {
+        setWatchedIntervals(res.data.watchedIntervals || []);
+        setLastSavedTime(res.data.lastWatchedPosition || 0);
+      })
+      .catch((err) => console.error("Fetch error:", err));
   }, []);
 
-  const handleTimeUpdate = () => {
-    const currentTime = Math.floor(videoRef.current.currentTime);
-    const newInterval = { start: currentTime, end: currentTime + 1 };
-    setWatched(prev => mergeIntervals([...prev, newInterval]));
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = lastSavedTime;
+    }
+  }, [lastSavedTime]);
+
+  const mergeIntervals = (intervals) => {
+    if (!intervals.length) return [];
+    const sorted = [...intervals].sort((a, b) => a.start - b.start);
+    const merged = [sorted[0]];
+
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = merged[merged.length - 1];
+      const current = sorted[i];
+      if (current.start <= prev.end) {
+        prev.end = Math.max(prev.end, current.end);
+      } else {
+        merged.push(current);
+      }
+    }
+    return merged;
   };
 
+  const calculateProgress = (intervals, duration) => {
+    const merged = mergeIntervals(intervals);
+    const watchedSeconds = merged.reduce(
+      (acc, { start, end }) => acc + (end - start),
+      0
+    );
+    return Math.min(((watchedSeconds / duration) * 100).toFixed(2), 100);
+  };
+
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    const currentTime = video.currentTime;
+    const interval = 1;
+  
+    if (!video.duration) return; // Duration not ready
+  
+    const newInterval = { start: currentTime - interval, end: currentTime };
+    const updatedIntervals = mergeIntervals([...watchedIntervals, newInterval]);
+  
+    const percent = calculateProgress(updatedIntervals, video.duration);
+    setWatchedIntervals(updatedIntervals);
+    setProgressPercent(percent);
+  };
+  
+
   const handlePause = () => {
-    const currentTime = Math.floor(videoRef.current.currentTime);
-    const data = {
-      userId: USER_ID,
-      videoId: VIDEO_ID,
-      watchedIntervals: watched,
-      lastWatchedPosition: currentTime
-    };
-    axios.post('http://localhost:5000/api/progress/save', data)
-      .then(res => {
-        setProgress(calculateProgress(res.data.watchedIntervals));
-      });
+    const video = videoRef.current;
+    const currentTime = video.currentTime;
+    const updated = mergeIntervals([
+      ...watchedIntervals,
+      { start: currentTime - 1, end: currentTime },
+    ]);
+    setWatchedIntervals(updated);
+    setLastSavedTime(currentTime);
+
+    axios
+      .post(backendUrl, {
+        userId: USER_ID,
+        videoId: VIDEO_ID,
+        watchedIntervals: updated,
+        lastWatchedPosition: currentTime,
+      })
+      .catch((err) => console.error("Save error:", err));
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Lecture Video</h2>
+    <div className="App" style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h2>📺 Lecture Video</h2>
+
       <video
         ref={videoRef}
-        width="600"
+        width="640"
         controls
         onTimeUpdate={handleTimeUpdate}
         onPause={handlePause}
         onLoadedMetadata={() => {
+          setVideoDuration(videoRef.current.duration);
           videoRef.current.currentTime = lastSavedTime;
         }}
       >
-       <source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4" />
+        <source src="/sample-5s.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-      <p>Progress: {progress}%</p>
+
+      <div style={{ marginTop: "10px" }}>
+        <strong>Progress:</strong> {progressPercent}%
+      </div>
+
+      <div
+        style={{
+          marginTop: "5px",
+          height: "10px",
+          width: "640px",
+          background: "#ccc",
+          borderRadius: "4px",
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${progressPercent}%`,
+            background: "#4caf50",
+            borderRadius: "4px",
+            transition: "width 0.3s ease",
+          }}
+        ></div>
+      </div>
     </div>
   );
-}
+};
 
 export default App;
