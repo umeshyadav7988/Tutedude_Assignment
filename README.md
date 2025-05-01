@@ -87,8 +87,8 @@ npm start
 
 ## 📷 UI Preview
 
-| Video Player With Progress | Resume Playback |
-|----------------------------|-----------------|
+| Video Player With Progress |
+|----------------------------|
 (![Screenshot (489)](https://github.com/user-attachments/assets/2d8714ea-c2e0-4757-8994-3c2d6d534454)
 
 
