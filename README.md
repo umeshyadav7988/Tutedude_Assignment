@@ -1,6 +1,3 @@
-### 📄 `README.md`
-
-```markdown
 # 🎓 Real Video Progress Tracker
 
 Track real video-watching progress in online learning platforms. Instead of just checking if a video is "completed," this tool tracks the **unique** parts of the video a user has watched — preventing fake progress from skipping or rewatching.
@@ -57,7 +54,7 @@ npm start
 Make sure your MongoDB URI is set in `backend/.env`:
 
 ```env
-MONGO_URI=mongodb://localhost:27017/videoTrackerDB
+MONGO_URI=
 PORT=5000
 ```
 
@@ -92,8 +89,8 @@ npm start
 
 | Video Player With Progress | Resume Playback |
 |----------------------------|-----------------|
-| ![UI](![Screenshot (489)](https://github.com/user-attachments/assets/2d8714ea-c2e0-4757-8994-3c2d6d534454)
-)  | ![Resume](screenshots/resume.png) |
+(![Screenshot (489)](https://github.com/user-attachments/assets/2d8714ea-c2e0-4757-8994-3c2d6d534454)
+
 
 ---
 
