@@ -110,6 +110,10 @@ Fetch previously saved progress and intervals.
 | Video Player With Progress |
 |----------------------------|
 ![Screenshot (489)](https://github.com/user-attachments/assets/2d8714ea-c2e0-4757-8994-3c2d6d534454)
+![Screenshot (490)](https://github.com/user-attachments/assets/3eefd9c9-4c62-4dac-85a0-80ba30c06e57)
+![Screenshot (491)](https://github.com/user-attachments/assets/291abd0c-c57b-44a6-9519-5181d8f05550)
+
+
 
 ---
 
